@@ -41,7 +41,7 @@ public class HighScoreTable : MonoBehaviour
     [SerializeField] private float entryHeight = 30f;
     [SerializeField] private EntryUiPaths uiPaths = new EntryUiPaths();
 
-    private const string PlayerPrefsKey = "highScoreTable";
+    private const string BaseHighScoreKey = "highScoreTable";
     private List<Transform> highScoreEntryTransformList;
     private HighScores highScores;
 
@@ -50,6 +50,16 @@ public class HighScoreTable : MonoBehaviour
         InitializeDataIfNeeded();
         entryTemplate.gameObject.SetActive(false);
         RefreshHighScoreTable();
+    }
+
+    private void OnEnable()
+    {
+        PlayerProfileManager.OnProfileChanged += HandleProfileChanged;
+    }
+
+    private void OnDisable()
+    {
+        PlayerProfileManager.OnProfileChanged -= HandleProfileChanged;
     }
 
     /// <summary>
@@ -76,32 +86,19 @@ public class HighScoreTable : MonoBehaviour
 
     public void SaveHighScoreTable()
     {
-        string json = JsonUtility.ToJson(highScores);
-        PlayerPrefs.SetString(PlayerPrefsKey, json);
-        PlayerPrefs.Save();
+        SaveSystem.Save(BaseHighScoreKey, highScores);
     }
 
     public void LoadHighScoreTable()
     {
-        string jsonString = PlayerPrefs.GetString(PlayerPrefsKey, string.Empty);
-
-        if (string.IsNullOrEmpty(jsonString))
+        highScores = SaveSystem.Load(BaseHighScoreKey, new HighScores
         {
-            highScores = new HighScores
-            {
-                highScoreEntryList = new List<HighScoreEntry>()
-            };
-            return;
-        }
+            highScoreEntryList = new List<HighScoreEntry>()
+        });
 
-        highScores = JsonUtility.FromJson<HighScores>(jsonString);
-
-        if (highScores == null || highScores.highScoreEntryList == null)
+        if (highScores.highScoreEntryList == null)
         {
-            highScores = new HighScores
-            {
-                highScoreEntryList = new List<HighScoreEntry>()
-            };
+            highScores.highScoreEntryList = new List<HighScoreEntry>();
         }
     }
 
@@ -225,6 +222,12 @@ public class HighScoreTable : MonoBehaviour
             case 3: return "3RD";
             default: return rank + "TH";
         }
+    }
+
+    private void HandleProfileChanged(string _)
+    {
+        InitializeDataIfNeeded();
+        RefreshHighScoreTable();
     }
 
     [ContextMenu("Add Random Test Entry")]
