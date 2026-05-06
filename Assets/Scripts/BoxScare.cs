@@ -4,15 +4,10 @@ using UnityEngine;
 
 public class BoxScare : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public GameObject boxHolder;
 
-    // Update is called once per frame
-    void Update()
+    void OnTriggerEnter(Collider other)
     {
-        
+        boxHolder.SetActive(false);
     }
 }
